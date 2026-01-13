@@ -1,3 +1,4 @@
+document.getElementById("status").textContent = "JS起動OK";
 statusEl.textContent = "クリック検知";
 // ======================
 // ① 景品リスト（画像なし）
@@ -197,4 +198,5 @@ btn.addEventListener("click", () => {
     btn.disabled = false;
   }, 800); // 1500だと長く感じるので800ms推奨（好みで戻してOK）
 });
+
 
