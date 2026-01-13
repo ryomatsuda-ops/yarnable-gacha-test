@@ -20,11 +20,13 @@
       background: #222;
       box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     }
-    h1 {
-      font-size: 4.5rem;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
+   .title {
+  font-size: 72px;      /* ← ここが文字サイズ */
+  margin: 0 0 20px;     /* ← 上下の余白（上,左右,下） */
+  line-height: 1;       /* ← 文字の詰まり */
+  text-align: center;   /* ← 中央揃え */
+}
+
     p {
       margin: 4px 0 16px;
       font-size: 0.95rem;
@@ -95,7 +97,7 @@
 <body>
 
   <div class="gacha-container">
-    <h1>Yarnable®</h1>
+    <h1 class="title">Yarnable®</h1>
 
     <button id="rollButton">ガチャを回す</button>
 
@@ -121,4 +123,5 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
