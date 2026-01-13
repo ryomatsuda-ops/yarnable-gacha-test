@@ -20,30 +20,24 @@
       background: #222;
       box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     }
-   .title {
-  font-size: 10px;      /* ← ここが文字サイズ */
-  margin: 0 0 10px;     /* ← 上下の余白（上,左右,下） */
-  line-height: 1;       /* ← 文字の詰まり */
-  text-align: center;   /* ← 中央揃え */
-}
-
+    h1 {
+      font-size: 4.5rem;
+      margin-bottom: 10px;
+    }
     p {
       margin: 4px 0 16px;
       font-size: 0.95rem;
       color: #ccc;
     }
-#rollButton {
-  font-size: 1.6rem;          /* 文字を大きく */
-  padding: 10px 10px;         /* ボタン自体を大きく */
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  background: #fff;
-  color: #111;
-  margin-top: 10px;           /* 上に余白 */
-  box-shadow: 0 6px 16px rgba(0,0,0,0.6); /* 立体感 */
-}
-
+    #rollButton {
+      font-size: 1.1rem;
+      padding: 12px 32px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #fff;
+      color: #111;
+    }
     #rollButton:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -100,7 +94,7 @@
 <body>
 
   <div class="gacha-container">
-    <h1 class="title">Yarnable®</h1>
+    <h1>Yarnable®</h1>
 
     <button id="rollButton">ガチャを回す</button>
 
@@ -126,11 +120,3 @@
   <script src="main.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
