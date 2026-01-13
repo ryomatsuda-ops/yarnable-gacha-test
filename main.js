@@ -173,7 +173,7 @@ btn.addEventListener("click", () => {
     const prize = rollPrize(inventory);
     if (!prize) {
       statusEl.textContent = "すべての景品が在庫切れです。";
-      btn.disabled = true;
+      btn.disabled = false;
       return;
     }
 
@@ -194,3 +194,4 @@ btn.addEventListener("click", () => {
     btn.disabled = false;
   }, 1500);
 });
+
