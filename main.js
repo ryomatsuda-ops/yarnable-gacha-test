@@ -1,28 +1,31 @@
 // ======================
-// Yarnable ガチャ（在庫連動デモ） main.js
+// ① 景品リスト
 // ======================
-
-// ① 景品リスト（画像なし）
+// id: 在庫テーブルと紐付けるためのキー
 const prizes = [
-  { id: "ssr", name: "特賞：Yarnable体験会＠野尻湖＋ルアー＋ステッカー", weight: 1 },
-  { id: "a",   name: "A賞：Yarnable体験会＠光進丸2day＋ステッカー",     weight: 4 },
-  { id: "b",   name: "B賞：ロイヤルブルー社製ルアー＋ステッカー",       weight: 15 },
-  { id: "c",   name: "C賞：タオル＋ステッカー",                         weight: 30 },
-  { id: "d",   name: "D賞：ステッカー",                                 weight: 50 },
+  { id: "ssr", name: "特賞：Yarnable体験会＠野尻湖＋ルアー＋ステッカー", rarity: "", weight: 1, image: "image_ssr01.jpg" },
+  { id: "a",   name: "A賞：Yarnable体験会＠光進丸2day＋ステッカー", rarity: "", weight: 4, image: "image_ssr02.jpg" },
+  { id: "b",   name: "B賞：ロイヤルブルー社製ルアー＋ステッカー",   rarity: "", weight: 15 },
+  { id: "c",   name: "C賞：タオル＋ステッカー",     rarity: "", weight: 30 },
+  { id: "d",   name: "D賞：ステッカー",      rarity: "", weight: 50, image: "image_ssr01.jpg" },
 ];
 
+// ======================
 // ② 在庫の初期値（デモ用）
+//    将来はここを Firebase の値で上書きするイメージ
+// ======================
 const DEFAULT_INVENTORY = {
-  ssr: 5,
-  a:   5,
-  b:   40,
-  c:   50,
-  d:   100,
+  ssr: 5,  // 購入しない　アンケート回答者
+  a:   5,　// 購入しない　アンケート回答者
+  b:   40,　// 購入しない　アンケート回答者
+  c:   50, // 購入しない　アンケート回答者
+  d:   100, // 購入しない　アンケート回答者
 };
 
 const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
+const STORAGE_KEY_PLAYED    = "yarnable_gacha_played_v1";
 
-// 深いコピー用
+// 深いコピー用のユーティリティ
 function clone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -31,16 +34,12 @@ function clone(obj) {
 function loadInventory() {
   const raw = localStorage.getItem(STORAGE_KEY_INVENTORY);
   if (!raw) return clone(DEFAULT_INVENTORY);
-
   try {
     const parsed = JSON.parse(raw);
+    // 足りないキーがあれば補完（将来、景品追加したとき用）
     const inv = clone(DEFAULT_INVENTORY);
-
-    // 既存データで上書き（不足キーはDEFAULTで補完）
-    for (const key of Object.keys(inv)) {
-      if (parsed && typeof parsed[key] === "number") {
-        inv[key] = parsed[key];
-      }
+    for (const key of Object.keys(parsed)) {
+      if (key in inv) inv[key] = parsed[key];
     }
     return inv;
   } catch (e) {
@@ -54,16 +53,29 @@ function saveInventory(inv) {
   localStorage.setItem(STORAGE_KEY_INVENTORY, JSON.stringify(inv));
 }
 
+//★ 1回プレイ済みフラグ
+//★ function isAlreadyPlayed() {
+//★  return localStorage.getItem(STORAGE_KEY_PLAYED) === "1"; // ← 常に "まだプレイしていない"
+//★ }
+//★ function setPlayed() {
+//★   localStorage.setItem(STORAGE_KEY_PLAYED, "1"); // 何もしない
+//★ }
+
+// ======================
 // ③ 重み付きランダム抽選（在庫0の景品は除外）
-function rollPrize(inventory, excludeHighPrizes) {
+// ======================
+function rollPrize(inventory) {
+  // まず在庫がある景品だけ
   let available = prizes.filter(p => (inventory[p.id] || 0) > 0);
 
-  // 特賞・A賞を除外するモード
+  // ★特賞・A賞を除外するモードの場合はここで弾く
   if (excludeHighPrizes) {
     available = available.filter(p => p.id !== "ssr" && p.id !== "a");
   }
 
-  if (available.length === 0) return null;
+  if (available.length === 0) {
+    return null; // 全部在庫切れ
+  }
 
   const totalWeight = available.reduce((sum, p) => sum + p.weight, 0);
   let r = Math.random() * totalWeight;
@@ -76,137 +88,154 @@ function rollPrize(inventory, excludeHighPrizes) {
 }
 
 // ======================
-// ④ 画面制御（DOMが取れてから実行）
+// ④ 画面制御
 // ======================
-window.addEventListener("DOMContentLoaded", () => {
-  const btn       = document.getElementById("rollButton");
-  const resetBtn  = document.getElementById("resetButton");
-  const rerollBtn = document.getElementById("rerollButton");
-  const statusEl  = document.getElementById("status");
-  const invEl     = document.getElementById("inventory");
+const btn      = document.getElementById("rollButton");
+const statusEl = document.getElementById("status");
+const invEl    = document.getElementById("inventory");
 
-  // もし要素が取れないなら、ここで止める
-  if (!btn || !resetBtn || !rerollBtn || !statusEl || !invEl) {
-    console.error("必要なHTML要素が見つかりません（idの一致を確認してください）");
+let inventory = loadInventory();
+
+// 在庫表示
+function renderInventory() {
+  invEl.innerHTML = "";
+  prizes.forEach(p => {
+    const row = document.createElement("div");
+    row.className = "inventory-item";
+    const left = document.createElement("div");
+    left.textContent = `${p.rarity} ${p.name}`;
+    const right = document.createElement("div");
+    const count = inventory[p.id] ?? 0;
+    right.textContent = `残り: ${count}`;
+    row.appendChild(left);
+    row.appendChild(right);
+    invEl.appendChild(row);
+  });
+}
+
+// 初期表示
+renderInventory();
+
+//★ すでにこの端末で1回使われていたらボタン無効化
+//★ if (isAlreadyPlayed()) {
+//★   btn.disabled = true;
+//★  statusEl.textContent = "この端末ではすでに1回プレイ済みです。";
+//★ }
+
+// ★追加：直前に当たった景品を覚えておく
+let lastPrize = null;
+
+// ★追加：特賞・A賞を今後の抽選から外すフラグ
+let excludeHighPrizes = false;
+
+// ガチャボタン押下
+btn.addEventListener("click", () => {
+// ======================
+// 在庫リセットボタン
+// ======================
+const resetBtn = document.getElementById("resetButton");
+
+resetBtn.addEventListener("click", () => {
+  // 在庫を初期値に戻す
+  inventory = clone(DEFAULT_INVENTORY);
+  saveInventory(inventory);
+  renderInventory();
+
+  // ボタンの状態リセット（何回でも引ける仕様なら触らなくてOK）
+  btn.disabled = false;
+  statusEl.textContent = "在庫を初期状態に戻しました。";
+
+  // もし「1回制限」を消していないなら、プレイ済みフラグも消す
+  // localStorage.removeItem(STORAGE_KEY_PLAYED);
+});
+
+
+
+
+// ======================
+// 特賞・A賞を辞退して別賞だけを狙うボタン
+// ======================
+const rerollBtn = document.getElementById("rerollButton");
+
+rerollBtn.addEventListener("click", () => {
+  // 直前に何も当たっていない場合
+  if (!lastPrize) {
+    statusEl.textContent = "直前に当選した景品がありません。ガチャを回してから押してください。";
     return;
   }
 
-  let inventory = loadInventory();
-
-  // 直前当選（辞退用）
-  let lastPrize = null;
-
-  // 特賞・A賞を除外するフラグ
-  let excludeHighPrizes = false;
-
-  // 在庫表示
-  function renderInventory() {
-    invEl.innerHTML = "";
-
-    prizes.forEach(p => {
-      const row = document.createElement("div");
-      row.className = "inventory-item";
-
-      const left = document.createElement("div");
-      left.textContent = p.name;
-
-      const right = document.createElement("div");
-      const count = inventory[p.id] ?? 0;
-      right.textContent = `残り: ${count}`;
-
-      row.appendChild(left);
-      row.appendChild(right);
-      invEl.appendChild(row);
-    });
+  // 対象は「特賞(ssr)」と「A賞(a)」だけ
+  if (lastPrize.id !== "ssr" && lastPrize.id !== "a") {
+    statusEl.textContent = "このボタンは、特賞またはA賞を辞退するときだけ使えます。";
+    return;
   }
 
-  // 初期表示
+  // 在庫を元に戻す
+  inventory[lastPrize.id] = (inventory[lastPrize.id] || 0) + 1;
+  saveInventory(inventory);
   renderInventory();
-  statusEl.textContent = ""; // 起動時は空
 
-  // ======================
-  // リセットボタン
-  // ======================
-  resetBtn.addEventListener("click", () => {
-    inventory = clone(DEFAULT_INVENTORY);
-    saveInventory(inventory);
-    renderInventory();
+  // 今後の抽選から特賞・A賞を外す
+  excludeHighPrizes = true;
 
-    excludeHighPrizes = false;
-    lastPrize = null;
+  statusEl.textContent = `${lastPrize.name} を辞退しました。今後は B賞・C賞・D賞のみが抽選されます。`;
 
-    btn.disabled = false;
-    statusEl.textContent = "在庫を初期状態に戻しました。";
-  });
+  // 辞退処理が終わったので、最後の景品情報はクリア
+  lastPrize = null;
+});
 
-  // ======================
-  // 特賞・A賞を辞退してB/C/Dだけ狙うボタン
-  // ======================
-  rerollBtn.addEventListener("click", () => {
-    if (!lastPrize) {
-      statusEl.textContent = "直前に当選した景品がありません。ガチャを回してから押してください。";
-      return;
-    }
 
-    if (lastPrize.id !== "ssr" && lastPrize.id !== "a") {
-      statusEl.textContent = "このボタンは、特賞またはA賞を辞退するときだけ使えます。";
-      return;
-    }
 
-    // 在庫を元に戻す
-    inventory[lastPrize.id] = (inventory[lastPrize.id] || 0) + 1;
-    saveInventory(inventory);
-    renderInventory();
 
-    // 今後はB/C/Dのみ
-    excludeHighPrizes = true;
+//★  if (isAlreadyPlayed()) {
+//★    // 念のため二重チェック
+//★    statusEl.textContent = "この端末ではすでに1回プレイ済みです。";
+//★    btn.disabled = true;
+//★    return;
+//★  }
 
-    statusEl.textContent = `${lastPrize.name} を辞退しました。今後は B賞・C賞・D賞のみが抽選されます。`;
 
-    lastPrize = null;
-    btn.disabled = false;
-  });
 
-  // ======================
-  // ガチャボタン
-  // ======================
-  btn.addEventListener("click", () => {
-    const anyStockLeft = prizes.some(p => (inventory[p.id] || 0) > 0);
-    if (!anyStockLeft) {
+  // 在庫切れチェック（全景品0ならエラー）
+  const anyStockLeft = prizes.some(p => (inventory[p.id] || 0) > 0);
+  if (!anyStockLeft) {
+    statusEl.textContent = "すべての景品が在庫切れです。";
+    btn.disabled = true;
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.innerHTML = `
+    <div class="spinner"></div>
+    <div>抽選中...</div>
+  `;
+
+  setTimeout(() => {
+    const prize = rollPrize(inventory);
+    if (!prize) {
       statusEl.textContent = "すべての景品が在庫切れです。";
       btn.disabled = true;
       return;
     }
 
-    // 多重クリック防止
+    // 在庫を1つ減らす
+    inventory[prize.id] = (inventory[prize.id] || 0) - 1;
+    saveInventory(inventory);
+    renderInventory();
+
+
+
+    // この端末では1回のみ
+//★    setPlayed();
+
+statusEl.innerHTML = `
+  <div class="result">おめでとうございます！！</div>
+  <div class="prize-name">${prize.name}</div>
+
+  ${prize.image ? `<img src="${prize.image}" style="margin-top:5px;max-width:40%;border-radius:12px;">` : ""}
+`;
+
+
     btn.disabled = true;
-
-    statusEl.innerHTML = `
-      <div class="spinner"></div>
-      <div>抽選中...</div>
-    `;
-
-    setTimeout(() => {
-      const prize = rollPrize(inventory, excludeHighPrizes);
-      if (!prize) {
-        statusEl.textContent = "すべての景品が在庫切れです。";
-        btn.disabled = true;
-        return;
-      }
-
-      // 在庫を1つ減らす
-      inventory[prize.id] = (inventory[prize.id] || 0) - 1;
-      saveInventory(inventory);
-      renderInventory();
-
-      // 直前当選を記録（辞退用）
-      lastPrize = prize;
-
-      statusEl.innerHTML = `
-        <div class="result">おめでとうございます！！</div>
-        <div class="prize-name">${prize.name}</div>
-      `;
-
-      // 次も回せる
-      btn.disabled = false;
-    },
+  }, 1500);
+});
