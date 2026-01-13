@@ -159,11 +159,11 @@ btn.addEventListener("click", () => {
   const anyStockLeft = prizes.some(p => (inventory[p.id] || 0) > 0);
   if (!anyStockLeft) {
     statusEl.textContent = "すべての景品が在庫切れです。";
-    btn.disabled = true;
+    btn.disabled = false;
     return;
   }
 
-  btn.disabled = true;
+  btn.disabled = false;
   statusEl.innerHTML = `
     <div class="spinner"></div>
     <div>抽選中...</div>
@@ -194,4 +194,5 @@ btn.addEventListener("click", () => {
     btn.disabled = false;
   }, 1500);
 });
+
 
