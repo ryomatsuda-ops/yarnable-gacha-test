@@ -187,12 +187,12 @@ btn.addEventListener("click", () => {
 
     statusEl.innerHTML = `
       <div class="result">おめでとうございます！！</div>
-      <div class="prize-name">${prize.name}</div>
     `;
 
     // ★ここ重要：次も回せるように戻す
     btn.disabled = false;
   }, 1500);
 });
+
 
 
