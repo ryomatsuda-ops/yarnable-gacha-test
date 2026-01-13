@@ -1,1 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Yarnable ガチャ（在庫連動デモ）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body{
+      font-family: Impact, system-ui, -apple-system, "Segoe UI", sans-serif;
+      text-align:center;
+      padding:24px 12px;
+      background:#111;
+      color:#f5f5f5;
+    }
+
+    .gacha-container{
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 36px 24px;
+      border-radius: 20px;
+      background:#222;
+      box-shadow:0 8px 20px rgba(0,0,0,0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .title{
+      font-size: 56px;
+      margin: 6px 0 18px;
+      line-height: 1;
+      letter-spacing: 0.03em;
+    }
+
+    #rollButton{
+      font-size: 1.8rem;
+      padding: 22px 72px;
+      border-radius: 999px;
+      border:none;
+      cursor:pointer;
+      background:#fff;
+      color:#111;
+      margin-top: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    }
+    #rollButton:disabled{ opacity:0.6; cursor:not-allowed; }
+
+    .subbtn{
+      margin-top: 10px;
+      background:#555;
+      color:#fff;
+      padding: 12px 24px;
+      border:none;
+      border-radius: 10px;
+      cursor:pointer;
+      display:block;
+      margin-left:auto;
+      margin-right:auto;
+      font-size: 1rem;
+    }
+    .resetbtn{ background:#444; }
+
+    #status{
+      margin-top: 18px;
+      min-height: 72px;
+    }
+    .spinner{
+      margin: 12px auto;
+      width: 56px; height:56px;
+      border-radius:50%;
+      border:6px solid #444;
+      border-top-color:#fff;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg);} }
+
+    .result{
+      margin-top: 10px;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .prize-name{
+      margin-top: 10px;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .inventory-title{
+      margin-top: 24px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-align:left;
+    }
+    #inventory{
+      margin-top: 10px;
+      font-size: 1rem;
+      text-align:left;
+      display:block;
+    }
+    .inventory-item{
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .limit-info{
+      margin-top: 18px;
+      font-size: 0.9rem;
+      color:#bbb;
+      text-align:left;
+    }
+
+    @media (max-width:600px){
+      .title{ font-size: 40px; }
+      #rollButton{ width: 92%; padding: 18px 10px; font-size: 1.5rem; }
+      .gacha-container{ padding: 24px 14px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="gacha-container">
+    <div class="title">Yarnable®</div>
+
+    <button id="rollButton">ガチャを回す</button>
+
+    <button id="rerollButton" class="subbtn">
+      特賞・A賞を辞退して別の賞を狙う
+    </button>
+
+    <button id="resetButton" class="subbtn resetbtn">
+      リセット
+    </button>
+
+    <div id="status"></div>
+
+    <div class="inventory-title">在庫</div>
+    <div id="inventory"></div>
+
+    <div class="limit-info">
+      ※在庫情報は、この端末のブラウザ（localStorage）に保存されます。
+    </div>
+  </div>
+
+  <script>
+    // ===== 景品 =====
+    const prizes = [
+      { id: "ssr", name: "特賞：Yarnable体験会＠野尻湖＋ルアー＋ステッカー", weight: 1 },
+      { id: "a",   name: "A賞：Yarnable体験会＠光進丸2day＋ステッカー",     weight: 4 },
+      { id: "b",   name: "B賞：ロイヤルブルー社製ルアー＋ステッカー",       weight: 15 },
+      { id: "c",   name: "C賞：タオル＋ステッカー",                         weight: 30 },
+      { id: "d",   name: "D賞：ステッカー",                                 weight: 50 },
+    ];
+
+    const DEFAULT_INVENTORY = { ssr:5, a:5, b:40, c:50, d:100 };
+    const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
+
+    const btn = document.getElementById("rollButton");
+    const resetBtn = document.getElementById("resetButton");
+    const rerollBtn = document.getElementById("rerollButton");
+    const statusEl = document.getElementById("status");
+    const invEl = document.getElementById("inventory");
+
+    let lastPrize = null;
+    let excludeHighPrizes = false;
+
+    function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+    function loadInventory(){
+      const raw = localStorage.getItem(STORAGE_KEY_INVENTORY);
+      if(!raw) return clone(DEFAULT_INVENTORY);
+      try{
+        const parsed = JSON.parse(raw);
+        const inv = clone(DEFAULT_INVENTORY);
+        for(const k of Object.keys(inv)){
+          if(parsed && typeof parsed[k] === "number") inv[k] = parsed[k];
+        }
+        return inv;
+      }catch(e){
+        console.error(e);
+        return clone(DEFAULT_INVENTORY);
+      }
+    }
+
+    function saveInventory(inv){
+      localStorage.setItem(STORAGE_KEY_INVENTORY, JSON.stringify(inv));
+    }
+
+    let inventory = loadInventory();
+
+    function renderInventory(){
+      invEl.innerHTML = "";
+      prizes.forEach(p=>{
+        const row = document.createElement("div");
+        row.className = "inventory-item";
+        const left = document.createElement("div");
+        left.textContent = p.name;
+        const right = document.createElement("div");
+        right.textContent = "残り: " + (inventory[p.id] ?? 0);
+        row.appendChild(left);
+        row.appendChild(right);
+        invEl.appendChild(row);
+      });
+    }
+
+    function rollPrize(){
+      let available = prizes.filter(p => (inventory[p.id] || 0) > 0);
+      if(excludeHighPrizes){
+        available = available.filter(p => p.id !== "ssr" && p.id !== "a");
+      }
+      if(available.length === 0) return null;
+
+      const total = available.reduce((s,p)=>s+p.weight,0);
+      let r = Math.random() * total;
+      for(const p of available){
+        if(r < p.weight) return p;
+        r -= p.weight;
+      }
+      return available[available.length-1];
+    }
+
+    // 初期描画
+    renderInventory();
+    statusEl.textContent = "";
+
+    // リセット
+    resetBtn.addEventListener("click", ()=>{
+      inventory = clone(DEFAULT_INVENTORY);
+      saveInventory(inventory);
+      excludeHighPrizes = false;
+      lastPrize = null;
+      btn.disabled = false;
+      statusEl.textContent = "在庫を初期状態に戻しました。";
+      renderInventory();
+    });
+
+    // 辞退（特賞/A賞のみ）
+    rerollBtn.addEventListener("click", ()=>{
+      if(!lastPrize){
+        statusEl.textContent = "直前に当選した景品がありません。ガチャを回してから押してください。";
+        return;
+      }
+      if(lastPrize.id !== "ssr" && lastPrize.id !== "a"){
+        statusEl.textContent = "このボタンは、特賞またはA賞を辞退するときだけ使えます。";
+        return;
+      }
+      inventory[lastPrize.id] = (inventory[lastPrize.id] || 0) + 1;
+      saveInventory(inventory);
+      renderInventory();
+
+      excludeHighPrizes = true;
+      statusEl.textContent = lastPrize.name + " を辞退しました。今後は B賞・C賞・D賞のみが抽選されます。";
+      lastPrize = null;
+      btn.disabled = false;
+    });
+
+    // ガチャ
+    btn.addEventListener("click", ()=>{
+      const anyStock = prizes.some(p => (inventory[p.id] || 0) > 0);
+      if(!anyStock){
+        statusEl.textContent = "すべての景品が在庫切れです。";
+        btn.disabled = true;
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.innerHTML = '<div class="spinner"></div><div>抽選中...</div>';
+
+      setTimeout(()=>{
+        const prize = rollPrize();
+        if(!prize){
+          statusEl.textContent = "すべての景品が在庫切れです。";
+          btn.disabled = true;
+          return;
+        }
+
+        inventory[prize.id] = (inventory[prize.id] || 0) - 1;
+        saveInventory(inventory);
+        renderInventory();
+
+        lastPrize = prize;
+
+        statusEl.innerHTML =
+          '<div class="result">おめでとうございます！！</div>' +
+          '<div class="prize-name">' + prize.name + '</div>';
+
+        btn.disabled = false;
+      }, 800);
+    });
+  </script>
+</body>
+</html>
+
 
