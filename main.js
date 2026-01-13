@@ -159,11 +159,13 @@ btn.addEventListener("click", () => {
   const anyStockLeft = prizes.some(p => (inventory[p.id] || 0) > 0);
   if (!anyStockLeft) {
     statusEl.textContent = "すべての景品が在庫切れです。";
-    btn.disabled = false;
+    btn.disabled = true; // 在庫切れなら押せない
     return;
   }
 
-  btn.disabled = false;
+  // 押した瞬間に無効化（多重クリック防止）
+  btn.disabled = true;
+
   statusEl.innerHTML = `
     <div class="spinner"></div>
     <div>抽選中...</div>
@@ -173,7 +175,7 @@ btn.addEventListener("click", () => {
     const prize = rollPrize(inventory);
     if (!prize) {
       statusEl.textContent = "すべての景品が在庫切れです。";
-      btn.disabled = false;
+      btn.disabled = true;
       return;
     }
 
@@ -187,12 +189,10 @@ btn.addEventListener("click", () => {
 
     statusEl.innerHTML = `
       <div class="result">おめでとうございます！！</div>
+      <div class="prize-name">${prize.name}</div>
     `;
 
-    // ★ここ重要：次も回せるように戻す
+    // 結果表示後に有効化（次も回せる）
     btn.disabled = false;
-  }, 1500);
+  }, 800); // 1500だと長く感じるので800ms推奨（好みで戻してOK）
 });
-
-
-
