@@ -3,11 +3,11 @@
 // ======================
 // id: 在庫テーブルと紐付けるためのキー
 const prizes = [
-  { id: "ssr", name: "特賞：Yarnable体験会＠野尻湖＋ルアー＋ステッカー", rarity: "", weight: 1, image: },
-  { id: "a",   name: "A賞：Yarnable体験会＠光進丸2day＋ステッカー", rarity: "", weight: 4, image: },
-  { id: "b",   name: "B賞：ロイヤルブルー社製ルアー＋ステッカー",   rarity: "", weight: 15 },
-  { id: "c",   name: "C賞：タオル＋ステッカー",     rarity: "", weight: 30 },
-  { id: "d",   name: "D賞：ステッカー",      rarity: "", weight: 50, image: },
+  { id: "ssr", name: "体験会＠野尻湖＋ルアー＋ステッカー", rarity: "", weight: 1, },
+  { id: "a",   name: "体験会＠光進丸＋ステッカー", rarity: "", weight: 4, },
+  { id: "b",   name: "ルアー＋ステッカー",   rarity: "", weight: 15 },
+  { id: "c",   name: "ステッカー",     rarity: "", weight: 30 },
+  { id: "d",   name: "ボールペン",      rarity: "", weight: 50, },
 ];
 
 // ======================
@@ -15,11 +15,11 @@ const prizes = [
 //    将来はここを Firebase の値で上書きするイメージ
 // ======================
 const DEFAULT_INVENTORY = {
-  ssr: 5,  // 購入しない　アンケート回答者
-  a:   5,　// 購入しない　アンケート回答者
-  b:   40,　// 購入しない　アンケート回答者
-  c:   50, // 購入しない　アンケート回答者
-  d:   100, // 購入しない　アンケート回答者
+  ssr: 5,  // 数量
+  a:   5,　// 数量
+  b:   40,　// 数量
+  c:   50, // 数量
+  d:   100, // 数量
 };
 
 const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
@@ -239,4 +239,5 @@ statusEl.innerHTML = `
     btn.disabled = true;
   }, 1500);
 });
+
 
