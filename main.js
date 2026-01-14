@@ -15,11 +15,11 @@ const prizes = [
 //    将来はここを Firebase の値で上書きするイメージ
 // ======================
 const DEFAULT_INVENTORY = {
-  ssr: 12,  // 数量
-  a:   10,　// 数量
-  b:   30,　// 数量
-  c:   200, // 数量
-  d:   200, // 数量
+  ssr: 12, // 数量
+  a: 10, // 数量
+  b: 30, // 数量
+  c: 200, // 数量
+  d: 200, // 数量
 };
 
 const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
@@ -238,6 +238,7 @@ statusEl.innerHTML = `
     btn.disabled = true;
   }, 1500);
 });
+
 
 
 
