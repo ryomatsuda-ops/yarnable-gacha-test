@@ -149,12 +149,12 @@
     const prizes = [
       { id: "ssr", name: "体験会＠野尻湖＋ルアー＋ステッカー", weight: 1 },
       { id: "a",   name: "体験会＠光進丸＋ステッカー",     weight: 5 },
-      { id: "b",   name: "ルアー＋ステッカー",       weight: 10 },
+      { id: "b",   name: "ルアー",       weight: 10 },
       { id: "c",   name: "ステッカー",                         weight: 34 },
       { id: "d",   name: "ボールペン",                                 weight: 50 },
     ];
 
-    const DEFAULT_INVENTORY = { ssr:5, a:5, b:40, c:50, d:100 };
+    const DEFAULT_INVENTORY = { ssr:15, a:10, b:30, c:200, d:200 };
     const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
 
     const btn = document.getElementById("rollButton");
@@ -291,6 +291,7 @@
   </script>
 </body>
 </html>
+
 
 
 
