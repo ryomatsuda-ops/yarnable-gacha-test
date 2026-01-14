@@ -16,11 +16,12 @@ const prizes = [
 // ======================
 const DEFAULT_INVENTORY = {
   ssr: 12, // 数量
-  a: 10, // 数量
-  b: 30, // 数量
-  c: 200, // 数量
-  d: 200, // 数量
+  a:   10, // 数量
+  b:   30, // 数量
+  c:   200, // 数量
+  d:   200, // 数量
 };
+
 
 const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
 const STORAGE_KEY_PLAYED    = "yarnable_gacha_played_v1";
@@ -166,7 +167,7 @@ rerollBtn.addEventListener("click", () => {
 
   // 対象は「特賞(ssr)」と「A賞(a)」だけ
   if (lastPrize.id !== "ssr" && lastPrize.id !== "a") {
-    statusEl.textContent = "このボタンは、特賞またはA賞を辞退するときだけ使えます。";
+    statusEl.textContent = "このボタンは、体験会を辞退するときだけ使えます。";
     return;
   }
 
@@ -178,7 +179,7 @@ rerollBtn.addEventListener("click", () => {
   // 今後の抽選から特賞・A賞を外す
   excludeHighPrizes = true;
 
-  statusEl.textContent = `${lastPrize.name} を辞退しました。今後は B賞・C賞・D賞のみが抽選されます。`;
+  statusEl.textContent = `${lastPrize.name} を辞退しました。次は 先ほどの体験会以外が抽選されます。`;
 
   // 辞退処理が終わったので、最後の景品情報はクリア
   lastPrize = null;
@@ -238,6 +239,7 @@ statusEl.innerHTML = `
     btn.disabled = true;
   }, 1500);
 });
+
 
 
 
