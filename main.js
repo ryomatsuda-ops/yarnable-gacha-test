@@ -3,11 +3,11 @@
 // ======================
 // id: 在庫テーブルと紐付けるためのキー
 const prizes = [
-  { id: "ssr", name: "特賞：Yarnable体験会＠野尻湖＋ルアー＋ステッカー", rarity: "", weight: 1, image: "image_ssr01.jpg" },
-  { id: "a",   name: "A賞：Yarnable体験会＠光進丸2day＋ステッカー", rarity: "", weight: 4, image: "image_ssr02.jpg" },
+  { id: "ssr", name: "特賞：Yarnable体験会＠野尻湖＋ルアー＋ステッカー", rarity: "", weight: 1, image: },
+  { id: "a",   name: "A賞：Yarnable体験会＠光進丸2day＋ステッカー", rarity: "", weight: 4, image: },
   { id: "b",   name: "B賞：ロイヤルブルー社製ルアー＋ステッカー",   rarity: "", weight: 15 },
   { id: "c",   name: "C賞：タオル＋ステッカー",     rarity: "", weight: 30 },
-  { id: "d",   name: "D賞：ステッカー",      rarity: "", weight: 50, image: "image_ssr01.jpg" },
+  { id: "d",   name: "D賞：ステッカー",      rarity: "", weight: 50, image: },
 ];
 
 // ======================
@@ -239,3 +239,4 @@ statusEl.innerHTML = `
     btn.disabled = true;
   }, 1500);
 });
+
