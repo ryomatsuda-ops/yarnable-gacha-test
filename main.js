@@ -4,10 +4,10 @@
 // id: 在庫テーブルと紐付けるためのキー
 const prizes = [
   { id: "ssr", name: "体験会＠野尻湖＋ルアー＋ステッカー", rarity: "", weight: 1, },
-  { id: "a",   name: "体験会＠光進丸＋ステッカー", rarity: "", weight: 4, },
+  { id: "a",   name: "体験会＠光進丸＋ステッカー", rarity: "", weight: 10, },
   { id: "b",   name: "ルアー＋ステッカー",   rarity: "", weight: 15 },
-  { id: "c",   name: "ステッカー",     rarity: "", weight: 30 },
-  { id: "d",   name: "ボールペン",      rarity: "", weight: 50, },
+  { id: "c",   name: "ステッカー",     rarity: "", weight: 15 },
+  { id: "d",   name: "ボールペン",      rarity: "", weight: 59, },
 ];
 
 // ======================
@@ -15,11 +15,11 @@ const prizes = [
 //    将来はここを Firebase の値で上書きするイメージ
 // ======================
 const DEFAULT_INVENTORY = {
-  ssr: 5,  // 数量
-  a:   5,　// 数量
-  b:   40,　// 数量
-  c:   50, // 数量
-  d:   100, // 数量
+  ssr: 12,  // 数量
+  a:   10,　// 数量
+  b:   30,　// 数量
+  c:   200, // 数量
+  d:   200, // 数量
 };
 
 const STORAGE_KEY_INVENTORY = "yarnable_gacha_inventory_v1";
@@ -68,7 +68,7 @@ function rollPrize(inventory) {
   // まず在庫がある景品だけ
   let available = prizes.filter(p => (inventory[p.id] || 0) > 0);
 
-  // ★特賞・A賞を除外するモードの場合はここで弾く
+  // ★特賞を除外するモードの場合はここで弾く
   if (excludeHighPrizes) {
     available = available.filter(p => p.id !== "ssr" && p.id !== "a");
   }
@@ -229,7 +229,6 @@ rerollBtn.addEventListener("click", () => {
 //★    setPlayed();
 
 statusEl.innerHTML = `
-  <div class="result">おめでとうございます！！</div>
   <div class="prize-name">${prize.name}</div>
 
   ${prize.image ? `<img src="${prize.image}" style="margin-top:5px;max-width:40%;border-radius:12px;">` : ""}
@@ -239,5 +238,6 @@ statusEl.innerHTML = `
     btn.disabled = true;
   }, 1500);
 });
+
 
 
